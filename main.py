@@ -1,7 +1,7 @@
 import telebot
 from telebot import types
 from buttons_functions import find_ticker_by_company_name, find_trailing_pe_by_ticker,\
-    exchange_rate,find_forward_pe_by_ticker, find_open_quote_by_ticker, \
+    exchange_rate, find_forward_pe_by_ticker, find_open_quote_by_ticker, \
     find_close_quote_by_ticker, find_trailing_twelve_month_EPS, find_forward_EPS, \
     find_current_year_EPS, find_next_year_quarter_EPS, find_latest_news, find_company_info, \
     predictor_short_term, predictor_mid_term, predictor_long_term, graph
@@ -12,7 +12,7 @@ bot = telebot.TeleBot("1628495390:AAGK-Pyl_o6447HB149_9D666exXRiFkWow")
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     user_id = message.chat.id
-    stonks = open('/Users/axyniia/Desktop/Financial Terminal/photo_2021-02-06 22.38.13.jpeg', 'rb')
+    stonks = open('/Users/liaomarova/Desktop/stonks.jpeg', 'rb')
     user_id = message.chat.id
     bot.send_photo(user_id, stonks)
     keyboard_start = types.InlineKeyboardMarkup()
@@ -28,13 +28,13 @@ def get_start_keyboard():
     btn_ticker_symbol_finder = types.InlineKeyboardButton(text="Ticker Symbol finder",
                                                           callback_data="tickerSymbolFinder")
     btn_general_news = types.InlineKeyboardButton(text="General News", callback_data="generalNews")
-    btn_graph = types.InlineKeyboardButton(text="Graph", callback_data="graph")
     btn_company_info = types.InlineKeyboardButton(text="Company info", callback_data="company_info")
     btn_predictor = types.InlineKeyboardButton(text="Predictor", callback_data="predictor")
+    btn_graph = types.InlineKeyboardButton(text="Graph", callback_data="graph")
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
     keyboard.add(btn_price_quotation, btn_exchange_rates, btn_PE, btn_EPS, btn_ticker_symbol_finder,
-                 btn_general_news, btn_graph, btn_company_info, btn_predictor)
+                 btn_general_news, btn_company_info, btn_predictor, btn_graph)
     return keyboard
 pass
 
@@ -132,31 +132,8 @@ def callback_button_menu(call):
 
     elif call.data == "generalNews":
         msg = bot.send_message(user_id, "Enter the number of news you are interested in")
-        user_id = msg.chat.id
-        n = msg.text
-        news_list = find_latest_news(3)
-        bot.send_message(user_id, 'Latest news:', parse_mode='Markdown')
+        bot.register_next_step_handler(msg, news_handler)
 
-        for news in news_list:
-            title = news['title'].strip()
-            summary = news['summary'].strip()
-            link = news['link'].strip()
-
-            message = ''
-            message += '*' + title + '*' + '\n\n'
-            message += summary
-
-            keyboard_news = types.InlineKeyboardMarkup()
-            keyboard_news.row_width = 1
-            url_button = types.InlineKeyboardButton(text="Link", url=link)
-            keyboard_news.add(url_button)
-            bot.send_message(user_id, message, parse_mode='Markdown', reply_markup=keyboard_news)
-
-        keyboard_news1 = types.InlineKeyboardMarkup()
-        keyboard_news1.row_width = 1
-        btn_return = types.InlineKeyboardButton(text="Return to the menu", callback_data="return")
-        keyboard_news1.add(btn_return)
-        bot.send_message(user_id, "Tap to return", reply_markup=keyboard_news1)
 
     elif call.data == "graph":
         msg = bot.send_message(user_id, "To get graph, enter company ticker:")
@@ -240,7 +217,7 @@ def exchange_rate_handler(msg):
     quantity = subject[2]
 
     ex_rate = exchange_rate(from_curr, to_curr, quantity)
-
+    bot.send_message(user_id, "Here is the exchange rate")
     bot.send_message(user_id, ex_rate)
 
     keyboard_exchange_rate = types.InlineKeyboardMarkup()
@@ -312,16 +289,11 @@ def next_year_quarter_EPS_handler(msg):
 
 def graph_handler(msg):
     user_id = msg.chat.id
-    ticker = msg.text
-    result = graph(ticker)
-    bot.send_message(user_id, "Here is the graph")
-    bot.send_message(user_id, result)
 
-    # keyboard_get_graphs = types.InlineKeyboardMarkup()
-    # keyboard_get_graphs.row_width = 1
-    # btn_return = types.InlineKeyboardButton(text="Return to the menu", callback_data="return")
-    # keyboard_get_graphs.add(btn_return)
-    # bot.send_message(user_id, text="Return to the menu", reply_markup=keyboard_get_graphs)
+    ticker = msg.text
+
+    result = graph(ticker)
+    bot.send_message(user_id, result)
 
 
 def company_info_handler(msg):
@@ -343,7 +315,7 @@ def predictor_short_term_handler(msg):
     company_name = msg.text
 
     ticker = predictor_short_term(company_name)
-
+    bot.send_message(user_id, "Here is the prediction in short term")
     bot.send_message(user_id, ticker)
 
 def predictor_mid_term_handler(msg):
@@ -351,7 +323,7 @@ def predictor_mid_term_handler(msg):
     company_name = msg.text
 
     ticker = predictor_mid_term(company_name)
-
+    bot.send_message(user_id, "Here is the prediction in mid term")
     bot.send_message(user_id, ticker)
 
 def predictor_long_term_handler(msg):
@@ -359,8 +331,37 @@ def predictor_long_term_handler(msg):
     company_name = msg.text
 
     ticker = predictor_long_term(company_name)
-
+    bot.send_message(user_id, "Here is the prediction in long term")
     bot.send_message(user_id, ticker)
+
+def news_handler(msg):
+    user_id = msg.chat.id
+    n = int(msg.text.strip())
+    news_list = find_latest_news(n)
+    bot.send_message(user_id, 'Latest news:', parse_mode='Markdown')
+
+    for news in news_list:
+        title = news['title'].strip()
+        summary = news['summary'].strip()
+        link = news['link'].strip()
+
+        message = ''
+        message += '*' + title + '*' + '\n\n'
+        message += summary
+
+        keyboard_news = types.InlineKeyboardMarkup()
+        keyboard_news.row_width = 1
+        url_button = types.InlineKeyboardButton(text="Link", url=link)
+        keyboard_news.add(url_button)
+        bot.send_message(user_id, message, parse_mode='Markdown', reply_markup=keyboard_news)
+
+
+
+    keyboard_news1 = types.InlineKeyboardMarkup()
+    keyboard_news1.row_width = 1
+    btn_return = types.InlineKeyboardButton(text="Return to the menu", callback_data="return")
+    keyboard_news1.add(btn_return)
+    bot.send_message(user_id, "Tap to return", reply_markup=keyboard_news1)
 
 
 bot.polling()
