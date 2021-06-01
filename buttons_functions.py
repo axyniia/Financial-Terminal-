@@ -257,7 +257,7 @@ def find_next_year_quarter_EPS(ticker):
 def find_latest_news(n_news):
     url = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/news/list"
 
-    querystring = {"category":"generalnews","region":"US"}
+    querystring = {"category": "generalnews", "region": "US"}
 
     headers = {
         'x-rapidapi-key': "ffa9678c02msh1d10b4987f061e7p1aba90jsn2cb8e8bb14fa",
@@ -280,7 +280,6 @@ def find_latest_news(n_news):
 
 def find_company_info(ticker):
     url = "https://stock-analysis.p.rapidapi.com/api/v1/resources/profile"
-
     querystring = {"ticker": ticker}
 
     headers = {
@@ -345,7 +344,7 @@ def predictor_mid_term(ticker):
             continue
 
     try:
-        return json.loads(response.text)['finance']['result']['instrumentInfo']['technicalEvents']['midTerm']
+        return json.loads(response.text)['finance']['result']['instrumentInfo']['technicalEvents']['shortTerm']
     except:
         return "Not found"
 
@@ -369,14 +368,14 @@ def predictor_long_term(ticker):
             continue
 
     try:
-        return json.loads(response.text)['finance']['result']['instrumentInfo']['technicalEvents']['longTerm']
+        return json.loads(response.text)['finance']['result']['instrumentInfo']['technicalEvents']['shortTerm']
     except:
         return "Not found"
 
 
 def graph(ticker):
-    company = yf.Ticker(ticker)
-    df = company.history(period="max")
+    pfizer = yf.Ticker(ticker)
+    df = pfizer.history(period="max")
     df = df.reset_index()
     for i in ['Open']:
         df[i] = df[i].astype('float64')
@@ -394,4 +393,3 @@ def graph(ticker):
             )
         )
         return fig.show()
-
